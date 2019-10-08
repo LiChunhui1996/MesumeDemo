@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh"
+      xmlns:v-on="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Rollhoop</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+
+</head>
+
+
+<body>
+
+<div id="myApp">
+
+    <!--顶部导航栏-->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+
+        <a class="navbar-brand" href="#">Rollhoop</a>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">首页</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="/getTreasureList">文物列表</a>
+            </li>
+        </ul>
+
+        <ul class="navbar-nav ml-auto">
+        <span class="navbar-text">
+            Rollhoop欢迎您 {{items[0].name}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+        </ul>
+    </nav>
+
+    <!--选项-->
+    <div class="container">
+        <div class="card" style="margin-top: 20px">
+            <div class="card-header  form-inline">
+                <div class="container">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-dark" v-on:click="clickToChoose('insertItem')">添加文物信息
+                        </button>
+                        <button type="button" class="btn btn-dark" v-on:click="clickToChoose('updateItem')">修改文物信息
+                        </button>
+                        <button type="button" class="btn btn-dark" v-on:click="clickToChoose('deleteItem')">删除文物信息
+                        </button>
+                    </div>
+
+                    <input style="margin-left: 470px" v-if="search_seen" type="text" class="form-control"
+                           placeholder="请输入文物编号:" v-model="info">
+                    <button v-if="search_seen" type="button" class="btn btn-dark" v-on:click="searchOneTreasure()">确定
+                    </button>
+
+                </div>
+
+
+            </div>
+
+            <!--添加文物-->
+            <div class="card-body" v-if="insertItem">
+                <div v-if="card_seen" class="card" style="height:750px; width: 950px; margin-left: 50px">
+                    <div class="form-inline">
+<!--                        <img v-bind:src="image_src" alt="Card image"-->
+<!--                             style="height:210px; width:280px; margin:10px">-->
+
+                        <div class="card" style="margin: 10px; height: 210px">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>文物名称：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="name">
+                                </div>
+                                <div class="form-group">
+                                    <label style="margin: 5px; margin-left: 0px;">文物编号(系统生成)：{{id}}</label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>出土地点：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="find_place">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>所属年代：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="own_time">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin: 10px; width: 930px; height: 450px;">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>文物故事：</label>
+                                <textarea class="form-control" v-model="story"
+                                          style="height: 100px;">{{story}}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>文物工艺：</label>
+                                <textarea class="form-control" v-model="craft"
+                                          style="height: 100px;">{{craft}}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>文物研究：</label>
+                                <textarea class="form-control" v-model="study"
+                                          style="height:100px;">{{study}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button v-on:click="insertTreasure()" type="button" class="btn btn-danger ml-auto"
+                            style="margin-right: 10px">确认提交
+                    </button>
+                </div>
+            </div>
+
+            <!--            修改信息-->
+            <div class="card-body" v-if="updateItem">
+                <div v-if="card_seen" class="card" style="height:750px; width: 950px; margin-left: 50px">
+                    <div class="form-inline">
+                        <img v-bind:src="image_src" alt="Card image"
+                             style="height:210px; width:280px; margin:10px">
+
+                        <div class="card" style="margin: 10px; height: 210px">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>文物名称：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="name">
+                                </div>
+                                <div class="form-group">
+                                    <label style="margin: 5px; margin-left: 0px;">文物编号(不可修改)：{{id}}</label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>出土地点：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="find_place">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>所属年代：</label>
+                                    <input style="margin: 5px; width: 510px;" class="form-control" v-model="own_time">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin: 10px; width: 930px; height: 450px;">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>文物故事：</label>
+                                <textarea class="form-control" v-model="story"
+                                          style="height: 100px;">{{story}}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>文物工艺：</label>
+                                <textarea class="form-control" v-model="craft"
+                                          style="height: 100px;">{{craft}}</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>文物研究：</label>
+                                <textarea class="form-control" v-model="study"
+                                          style="height:100px;">{{study}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button v-on:click="updateTreasure()" type="button" class="btn btn-danger ml-auto"
+                            style="margin-right: 10px">确认修改
+                    </button>
+                </div>
+            </div>
+
+            <!--删除信息-->
+            <div class="card-body" v-if="deleteItem">
+                <div class="card-body" v-if="card_seen">
+                    <div class="card form-inline"
+                         style="height:350px; width: 950px; margin-left: 50px">
+                        <img class="card-img-top" v-bind:src="image_src" alt="Card image"
+                             style="height:330px; width:440px; margin:10px">
+                        <div class="card-body" style="width: 400px">
+                            <div class="form-inline">
+                                <h4 class="card-title">{{name}}</h4>
+                                <p class="card-text"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;文物编号：{{id}}</p>
+                            </div>
+                            <p class="card-text"> {{find_place}} {{own_time}}</p>
+                            <div class="btn-group">
+                                <button type="button" v-on:click="buttonClickToContent('story')" class="btn btn-light">
+                                    文物故事
+                                </button>
+                                <button type="button" v-on:click="buttonClickToContent('craft')" class="btn btn-light">
+                                    文物工艺
+                                </button>
+                                <button type="button" v-on:click="buttonClickToContent('study')" class="btn btn-light">
+                                    文物研究
+                                </button>
+                            </div>
+                            <p class="card-text" style="margin-top: 5px"> {{content}}</p>
+                        </div>
+                    </div>
+                    <button v-on:click="deleteTreasure()" type="button" class="btn btn-danger"
+                            style="margin-left: 920px; margin-top: 20px">确认删除
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    var items = [[${items}]];
+    var myApp = new Vue({
+        el: '#myApp'
+        , data: {
+            items: items,
+            seen: true,
+            insertItem: true,
+            updateItem: false,
+            deleteItem: false,
+            introduction: "为博物馆添加一个新的文物信息！",
+
+            info: '',
+            content: '',
+
+            card_seen: false,
+            search_seen: false,
+
+            id: '',
+            name: '',
+            find_place: '',
+            own_time: '',
+            web: '',
+            story: '',
+            craft: '',
+            study: '',
+            image_src: ''
+
+        },
+        methods: {
+            clickToChoose: function (choose) {
+                if (choose == "insertItem") {
+
+                    this.insertItem = true;
+                    this.updateItem = false;
+                    this.deleteItem = false;
+                    this.introduction = "为博物馆添加一个新的文物信息！";
+                    this.search_seen = false;
+                    this.card_seen = true;
+                    console.log("insertItem");
+
+                    this.name = '';
+                    this.find_place = '';
+                    this.own_time = '';
+                    this.web = '';
+                    this.story = '';
+                    this.craft = '';
+                    this.study = '';
+                    this.image_src = '';
+
+                    var that = this;
+                    axios.post('/countTreasure', {}).then(function (res) {
+                        console.log(res);
+                        that.id = res.data + 1;
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+
+                }
+                if (choose == "updateItem") {
+                    this.insertItem = false;
+                    this.updateItem = true;
+                    this.deleteItem = false;
+                    this.introduction = "修改博物馆某一个文物信息的信息！";
+                    this.search_seen = true;
+                    //this.$options.methods.updateTreasure();
+                    this.card_seen = false;
+                }
+                if (choose == "deleteItem") {
+                    this.insertItem = false;
+                    this.updateItem = false;
+                    this.deleteItem = true;
+                    this.introduction = "删除博物馆某一个文物信息的信息！";
+                    this.search_seen = true;
+                    this.card_seen = false;
+                }
+            },
+
+            updateTreasure: function () {
+                alert("正在提交");
+                var that = this;
+                axios.post('/updateOne', {
+                    id: that.id,
+                    name: that.name,
+                    find_place: that.find_place,
+                    own_time: that.own_time,
+                    web: that.web,
+                    story: that.story,
+                    craft: that.craft,
+                    study: that.study
+                }).then(function (res) {
+                    console.log(res);
+                    if (res.data == '1') {
+                        alert("已经修改成功！");
+                    } else {
+                        alert("抱歉，修改失败！")
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+            deleteTreasure: function () {
+                alert("正在删除");
+                var that = this;
+                axios.post('/deleteOne', {
+                    id: that.id,
+                }).then(function (res) {
+                    console.log(res);
+                    if (res.data == '1') {
+                        alert("已经成功删除！");
+                    } else {
+                        alert("抱歉，删除失败！")
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+            insertTreasure:function(){
+                alert("正在插入");
+                var that = this;
+                axios.post('/insertOne', {
+                    id: that.id,
+                    name: that.name,
+                    find_place: that.find_place,
+                    own_time: that.own_time,
+                    web: that.web,
+                    story: that.story,
+                    craft: that.craft,
+                    study: that.study
+                }).then(function (res) {
+                    console.log(res);
+                    if (res.data == '1') {
+                        alert("已经成功插入！");
+                    } else {
+                        alert("抱歉，插入失败！")
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+
+            },
+            searchOneTreasure: function () {
+                var that = this;
+                axios.post('/getOne', {
+                    name: that.info
+                }).then(function (res) {
+                    console.log(res);
+                    if (res.data.length == 1) {
+                        that.card_seen = true;
+                        that.id = res.data[0].id;
+                        that.name = res.data[0].name;
+                        that.own_time = res.data[0].ownTime;
+                        that.find_place = res.data[0].findPlace;
+                        that.web = res.data[0].web;
+                        that.story = res.data[0].story;
+                        that.craft = res.data[0].craft;
+                        that.study = res.data[0].study;
+                        that.image_src = "../static/treasure/" + res.data[0].id + ".png";
+                        that.content = res.data[0].story;
+                    } else {
+                        alert("输入编号错误！");
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+            buttonClickToContent: function (choose) {
+                if (choose == 'story') {
+                    this.content = this.story;
+                } else if (choose == 'craft') {
+                    this.content = this.craft;
+                } else if (choose == 'study') {
+                    this.content = this.study;
+                }
+            },
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh"
+      xmlns:v-on="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Rollhoop</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+</head>
+<body>
+<div id="app1">
+    <!--顶部导航栏-->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <a class="navbar-brand" href="#">Rollhoop</a>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">首页</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="/getTreasureList">文物列表</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link active" href="https://ticket.sxhm.com/ww/index">陕西博物馆购票</a>
+            </li>
+            <!-- Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#" id="navbardrop" data-toggle="dropdown">
+                    知名博物馆导航
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="http://www.sxhm.com">陕西省历史博物馆</a>
+                    <a class="dropdown-item" href="https://www.dpm.org.cn/Home.html">故宫博物院</a>
+                    <a class="dropdown-item" href="http://www.njmuseum.com/html/default.html">南京博物院</a>
+                </div>
+            </li>
+        </ul>
+        <span class="navbar-text">
+        欢迎光临Rollhoop博物馆&nbsp;!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+
+        <form class="form-inline justify-content-end">
+            <input v-model="info" class="form-control " type="text" placeholder="输入宝物编号或名称"> &nbsp;
+            <button v-on:click="buttonClickToFar()" class="btn btn-success .ml-auto" type="button">搜索</button>
+        </form>
+    </nav>
+
+    <!--文件标题-->
+    <div class="jumbotron text-center" style="margin-bottom:0">
+        <img src="../static/image/menu-logo.png" height="66" width="270"/>
+    </div>
+
+    <div class="container form-inline">
+        <div class="btn-group-vertical" style="margin-top: 5px;">
+            <div v-for="item in items">
+                <button v-on:click="buttonClickToShow(item.id)" type="button" class="btn btn-light"
+                        style="width: 200px">
+                    {{item.name}}
+                </button>
+            </div>
+        </div>
+
+        <div v-if="seen" class="card form-inline" style="height:350px; width: 850px; margin-left: 50px">
+            <img class="card-img-top" v-bind:src="image_src" alt="Card image"
+                 style="height:330px; width:440px; margin:10px">
+            <div class="card-body" style="width: 400px">
+                <div class="form-inline">
+                    <h4 class="card-title">{{name}}</h4>
+                    <p class="card-text"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;文物编号：{{id}}</p>
+                </div>
+                <p class="card-text"> {{find_place}} {{own_time}}</p>
+                <div class="btn-group">
+                    <button type="button" v-on:click="buttonClickToContent('story')" class="btn btn-light">文物故事</button>
+                    <button type="button" v-on:click="buttonClickToContent('craft')" class="btn btn-light">文物工艺</button>
+                    <button type="button" v-on:click="buttonClickToContent('study')" class="btn btn-light">文物研究</button>
+                </div>
+                <p class="card-text" style="margin-top: 5px"> {{content}}</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var items = [[${items}]];
+    var app = new Vue({
+        el: '#app1',
+        data: {
+            items: items,
+            seen: false,
+            content: '',
+            info: '',
+            id: '',
+            name: '',
+            find_place: '',
+            own_time: '',
+            web: '',
+            story: '',
+            craft: '',
+            study: '',
+            image_src: '',
+            search_item_count: '',
+            is_search: -1
+        },
+        methods: {
+            buttonClickToFar: function () {
+                var that = this;
+                axios.post('/getOne', {
+                    name: that.info,
+                }).then(function (res) {
+                    console.log(res);
+                    that.items = '';
+                    that.items = res.data;
+                    that.search_item_count = res.data.length;
+                    that.is_search = 1;
+                    if (that.search_item_count > 0) {
+                        that.id = res.data[0].id;
+                        that.name = res.data[0].name;
+                        that.own_time = res.data[0].ownTime;
+                        that.find_place = res.data[0].findPlace;
+                        that.web = res.data[0].web;
+                        that.story = res.data[0].story;
+                        that.craft = res.data[0].craft;
+                        that.study = res.data[0].study;
+                        that.image_src = "../static/treasure/" + res.data[0].id + ".png";
+                        that.content = res.data[0].story;
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+            buttonClickToShow: function (num) {
+                var that = this;
+                if (that.is_search == 1) {
+                    that.info = num;
+                    axios.post('/getOne', {
+                        name: that.info,
+                    }).then(function (res) {
+                        if (that.search_item_count > 0) {
+                            that.id = res.data[0].id;
+                            that.name = res.data[0].name;
+                            that.own_time = res.data[0].ownTime;
+                            that.find_place = res.data[0].findPlace;
+                            that.web = res.data[0].web;
+                            that.story = res.data[0].story;
+                            that.craft = res.data[0].craft;
+                            that.study = res.data[0].study;
+                            that.image_src = "../static/treasure/" + res.data[0].id + ".png";
+                            that.content = res.data[0].story;
+                        }
+
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+
+                } else {
+                    var id = num - 1;
+                    that.seen = true;
+                    that.id = num;
+                    that.name = this.items[id].name;
+                    that.own_time = this.items[id].ownTime;
+                    that.find_place = this.items[id].findPlace;
+                    that.web = this.items[id].web;
+                    that.story = this.items[id].story;
+                    that.craft = this.items[id].craft;
+                    that.study = this.items[id].study;
+                    that.image_src = "../static/treasure/" + num + ".png";
+                    that.content = this.items[id].story;
+                }
+            },
+            buttonClickToContent: function (choose) {
+                if (choose == 'story') {
+                    this.content = this.story;
+                } else if (choose == 'craft') {
+                    this.content = this.craft;
+                } else if (choose == 'study') {
+                    this.content = this.study;
+                }
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

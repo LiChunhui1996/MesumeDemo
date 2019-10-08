@@ -1,3 +1,3 @@
 # MesumeDemo
  
- JavaWeb = Springboot + thymeleatf + Vue + mtbatis
+ JavaWeb = Springboot + thymeleatf + Vue + mybatis + bootstrap
